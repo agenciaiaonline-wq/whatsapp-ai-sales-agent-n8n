@@ -1,6 +1,6 @@
 # 24/7 WhatsApp AI Sales & Booking Agent (Self-Hosted n8n + WAHA + Redis)
 
-[![Validate](https://img.shields.io/badge/Workflows-3_Validated-10b981?style=flat-square)](workflows/)
+[![Validate n8n Workflows](https://github.com/agenciaiaonline-wq/whatsapp-ai-sales-agent-n8n/actions/workflows/ci.yml/badge.svg)](https://github.com/agenciaiaonline-wq/whatsapp-ai-sales-agent-n8n/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Compose_Self--Hosted-2496ED?style=flat-square&logo=docker&logoColor=white)](docker/docker-compose.example.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
