@@ -1,0 +1,11 @@
+{
+  "event": "message",
+  "session": "default",
+  "payload": {
+    "id": "false_15550100123@c.us_3EB0SAMPLE9912",
+    "timestamp": 1795500000,
+    "from": "15550100123@c.us",
+    "fromMe": false,
+    "body": "Hi, we need a Next.js + Supabase SaaS MVP launched in 2 weeks. What are your packages?"
+  }
+}
