@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+n8n_data/
+waha_sessions/
+postgres_data/
+redis_data/
+.DS_Store
