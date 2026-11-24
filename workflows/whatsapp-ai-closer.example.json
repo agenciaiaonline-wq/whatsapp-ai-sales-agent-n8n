@@ -1,0 +1,108 @@
+{
+  "name": "WhatsApp AI Sales Closer (Sanitized Blueprint)",
+  "nodes": [
+    {
+      "id": "webhook_in",
+      "name": "WAHA Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waha-inbound"
+      }
+    },
+    {
+      "id": "filter_self",
+      "name": "Filter Outbound & Empty",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.payload.fromMe }}",
+              "value2": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "redis_dedupe",
+      "name": "Redis Message Deduplication",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "operation": "set",
+        "key": "={{ 'waha:seen:' + $json.body.payload.id }}",
+        "value": "1",
+        "expire": true,
+        "ttl": 300
+      }
+    },
+    {
+      "id": "ai_closer",
+      "name": "AI Sales Qualifier",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [900, 300],
+      "parameters": {
+        "text": "={{ $json.body.payload.body }}"
+      }
+    },
+    {
+      "id": "waha_reply",
+      "name": "Send WhatsApp Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1140, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $env.WAHA_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "={{ $('WAHA Inbound Webhook').item.json.body.payload.from }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "session",
+              "value": "default"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WAHA Inbound Webhook": {
+      "main": [[{"node": "Filter Outbound & Empty", "type": "main", "index": 0}]]
+    },
+    "Filter Outbound & Empty": {
+      "main": [[{"node": "Redis Message Deduplication", "type": "main", "index": 0}]]
+    },
+    "Redis Message Deduplication": {
+      "main": [[{"node": "AI Sales Qualifier", "type": "main", "index": 0}]]
+    },
+    "AI Sales Qualifier": {
+      "main": [[{"node": "Send WhatsApp Reply", "type": "main", "index": 0}]]
+    }
+  }
+}

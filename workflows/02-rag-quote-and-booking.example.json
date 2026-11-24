@@ -1,0 +1,69 @@
+{
+  "name": "02 - RAG Quote Lookup & Calendar Booking (Sanitized Blueprint)",
+  "nodes": [
+    {
+      "id": "subworkflow_trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [220, 280],
+      "parameters": {}
+    },
+    {
+      "id": "fetch_catalog",
+      "name": "Fetch Pricing & Scope FAQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "http://rag-api:8000/query",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify({ tenant_id: 'demo-agency', question: $json.user_message, top_k: 4 }) }}"
+      }
+    },
+    {
+      "id": "check_slots",
+      "name": "Query Cal.com Available Slots",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 280],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.cal.example.com/v2/slots/available"
+      }
+    },
+    {
+      "id": "format_quote",
+      "name": "Format Grounded Quote Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [940, 280],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "quote_summary",
+              "name": "quote_summary",
+              "type": "string",
+              "value": "={{ $json.answer }}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Fetch Pricing & Scope FAQ", "type": "main", "index": 0 }]]
+    },
+    "Fetch Pricing & Scope FAQ": {
+      "main": [[{ "node": "Query Cal.com Available Slots", "type": "main", "index": 0 }]]
+    },
+    "Query Cal.com Available Slots": {
+      "main": [[{ "node": "Format Grounded Quote Payload", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

@@ -1,0 +1,48 @@
+{
+  "name": "03 - High-Intent Human Handoff & CRM Sync (Sanitized Blueprint)",
+  "nodes": [
+    {
+      "id": "handoff_trigger",
+      "name": "Qualified Lead Escalation Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [220, 280],
+      "parameters": {}
+    },
+    {
+      "id": "upsert_crm",
+      "name": "Upsert Lead in PostgreSQL CRM",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 280],
+      "parameters": {
+        "operation": "upsert",
+        "schema": { "value": "public" },
+        "table": { "value": "qualified_leads" }
+      }
+    },
+    {
+      "id": "notify_closer",
+      "name": "Notify Account Executive (Webhook)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.example.com/crm-handoff",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify({ lead_name: $json.lead_name, intent: $json.intent_score, summary: $json.conversation_summary }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Qualified Lead Escalation Trigger": {
+      "main": [[{ "node": "Upsert Lead in PostgreSQL CRM", "type": "main", "index": 0 }]]
+    },
+    "Upsert Lead in PostgreSQL CRM": {
+      "main": [[{ "node": "Notify Account Executive (Webhook)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
