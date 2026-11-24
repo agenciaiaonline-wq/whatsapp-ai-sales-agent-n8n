@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-n8n_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-pass}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n_whatsapp}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-change-me-redis-pass}"]
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n_whatsapp}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-n8n_admin}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-change-me-postgres-pass}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-change-me-encryption-key}
+      - WEBHOOK_URL=${WEBHOOK_URL:-https://n8n.your-domain.example.com/}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "127.0.0.1:5678:5678"
+
+  waha:
+    image: devlikeapro/waha:latest
+    restart: always
+    environment:
+      - WHATSAPP_HOOK_URL=http://n8n:5678/webhook/waha-inbound
+      - WHATSAPP_HOOK_EVENTS=message
+      - WAHA_API_KEY=${WAHA_API_KEY:-change-me-waha-api-key}
+    volumes:
+      - waha_sessions:/app/.sessions
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  pg_data:
+  n8n_data:
+  waha_sessions:
